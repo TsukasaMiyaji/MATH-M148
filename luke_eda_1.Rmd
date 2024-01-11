@@ -1,0 +1,26 @@
+Libraries used
+```{r}
+
+library(tidyverse)
+
+```
+
+Run this code for first 500 rows sample
+```{r}
+
+luke_export_dir <- "C:/Users/lavil/source/repos/LukVill/Misc Data/export.csv"
+
+# this is based off of Luke's directory!!! #
+export_500 <- read_csv(luke_export_dir, n_max = 500)
+
+```
+
+Run this code if the WHOLE data needs to be imported
+```{r}
+
+luke_export_dir <- "C:/Users/lavil/source/repos/LukVill/Misc Data/export.csv"
+
+# this is based off of Luke's directory!!! #
+export <- read_csv(luke_export_dir)
+
+```
