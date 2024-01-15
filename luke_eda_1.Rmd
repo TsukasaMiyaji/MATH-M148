@@ -1,17 +1,19 @@
 Libraries used
 ```{r}
 
+setwd("C:/Users/lavil/source/repos/LukVill/MATH-M148")
+
 library(tidyverse)
 
 ```
 
-Run this code for first 500 rows sample
+Run this code for random 1000 rows sample
 ```{r}
 
-luke_export_dir <- "C:/Users/lavil/source/repos/LukVill/Misc Data/export.csv"
+luke_export_dir <- 'C:/Users/lavil/source/repos/LukVill/Misc Data/export.csv'
 
 # this is based off of Luke's directory!!! #
-export_500 <- read_csv(luke_export_dir, n_max = 500)
+export_head <- read_csv(luke_export_dir, n_max = 1000)
 
 ```
 
@@ -22,5 +24,83 @@ luke_export_dir <- "C:/Users/lavil/source/repos/LukVill/Misc Data/export.csv"
 
 # this is based off of Luke's directory!!! #
 export <- read_csv(luke_export_dir)
+
+```
+
+Event Definitions Load
+```{r}
+
+event_def <- read_csv("Event Definitions.csv")
+
+```
+
+
+Questions to Answer
+
+```{r}
+
+# 1. 
+nrow(export)
+
+# 2.
+# return customers are customers who have more than 1 interaction on different days 
+
+
+
+```
+
+Initial Personal Analysis
+```{r}
+
+mode_stats <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+glimpse(export)
+
+
+# DEFINE COLUMNS IN EXPORT
+# journey_steps
+unique_seq <- export %>% select(journey_steps_until_end) %>% unique() %>% pull(1)
+unique_seq <- sort(unique_seq)
+length(unique_seq)
+unique_seq[3299]
+# it seems the seq is 1-3299 are there missing numbers?
+idx <- any((1:3299) != unique_seq)
+idx
+# no missing numbers. 
+# CONCLUSION: min = 1, max = 3299
+
+# try to see pattern after conjoining event_def with export
+glimpse(event_def)
+event_def %>% filter(str_detect(event_name, "web"))
+# each event has an id. in export, event_name and ed_id are correlated.
+
+# gets count of unique ed_id
+export_head %>% select(ed_id) %>% ggplot(aes(x = ed_id)) + geom_bar()
+
+# mode of ed_id
+export %>% pull(ed_id) %>% mode_stats()
+
+# 19 is most frequent ed_id
+
+# filter
+
+export %>% filter(ed_id == 19)
+
+# there is significance in ed_id,
+# also there is significance in the event name and account number
+# event name is what the person does on the website
+# account number is the user???
+help("replace_na")
+```
+
+ed_id analysis
+
+
+event_name analysis
+```{r}
+
 
 ```
