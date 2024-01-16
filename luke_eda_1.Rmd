@@ -56,8 +56,8 @@ export <- export %>% mutate(months = month(event_timestamp), days = day(event_ti
 num_return_cust <- export %>% group_by(customer_id,months,days,years) %>% count() %>% ungroup() %>% group_by(customer_id) %>% count() %>% filter(n > 1)
 
 # 4.
-num_acct_custs <- export %>% group_by(account_id) %>% count() %>% filter(n > 1) %>% select(account_id) %>% n_distinct()
-num_cust_accts <- export %>% group_by(customer_id) %>% count() %>% filter(n > 1) %>% select(customer_id) %>% n_distinct()
+num_acct_custs <- export %>% group_by(account_id) %>% distinct(customer_id) %>% count() %>% filter(n > 1) 
+num_cust_accts <- export %>% group_by(customer_id) %>% distinct(customer_id) %>% count() %>% filter(n > 1)
 
 # 5.
 beg_date <- export[which.min(export$event_timestamp),]
@@ -130,10 +130,13 @@ ed_id analysis
 
 event_name analysis
 ```{r}
-
+export_head
+# whats the purpose of the event def? (what values are significant?)
 event_def
+# event def has the stage of each event
 
 # what is milestone number?
 
 
 ```
+event def defines the description of the category
