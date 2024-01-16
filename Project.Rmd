@@ -1,0 +1,129 @@
+---
+title: "Project"
+author: "Mark Hu"
+date: "2024-01-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import the dataset
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+library(data.table)
+client_data <- fread("Data/export.csv")
+```
+
+```{r}
+client_data %>% head(10)
+cleaned_cd <- na.omit(client_data)
+```
+
+```{r}
+dim(cleaned_cd)
+```
+
+### Question 1
+
+There are 64911906 observations in the dataset, with each observation representing each customer record.
+
+```{r}
+dim(cleaned_cd)
+summary(cleaned_cd)
+```
+
+### Question 2 / 3
+
+There are 1665688 customers.
+
+```{r}
+customer_num <- client_data %>% select(customer_id) %>% unique() %>% summarize(n = n())
+account_num <- client_data %>% select(account_id) %>% unique() %>% summarize(n = n())
+
+customer_num
+account_num
+
+account_num - customer_num
+```
+
+```{r}
+head(cleaned_cd)
+```
+
+### Question 4
+
+There are 310 accounts with more than 1 customer.
+
+```{r}
+extra_customer <- cleaned_cd %>%
+  group_by(account_id) %>%
+  distinct(customer_id) %>%
+  summarize(num_customer = n()) %>% 
+  filter(num_customer > 1)
+
+extra_customer %>% head(10)
+extra_customer %>% count()
+```
+
+There are 68351 customers with more than 1 account.
+
+```{r}
+extra_account <- cleaned_cd %>%
+  group_by(customer_id) %>%
+  distinct(account_id) %>%
+  summarize(num_account = n()) %>% 
+  filter(num_account > 1)
+
+extra_account %>% head(10)
+extra_account %>% count()
+```
+
+### Question 5
+
+```{r}
+time_period <- cleaned_cd %>% select(event_timestamp)
+time_period %>% head(10)
+```
+
+```{r}
+date <- format(time_period, "%Y-%m-%d") %>% unique()
+
+min(date)
+max(date)
+```
+
+```{r}
+time <- format(time_period, "%H:%M:%S")
+```
+
+```{r}
+time_info <- time %>% table()
+which.max(time_info)
+```
+
+### Question 6
+
+It is how many transactions have been made within each account
+
+```{r}
+cleaned_cd %>% filter(account_id == 1773350293)
+```
+
+```{r}
+journey_data <- cleaned_cd %>% 
+  group_by(account_id) %>% 
+  summarize(max_journey = max(journey_steps_until_end))
+
+#hist(journey_data)
+```
+
+### Question 7
+
+We cleaned the original dataset, and find there is no missing value.
