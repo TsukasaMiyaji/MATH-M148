@@ -1,6 +1,6 @@
 ---
 title: "Project"
-author: "Mark Hu"
+author: "Mark Hu; VILLANUEVA, LUKE ADRIAN; BAKER, JESSICA; MIYAJI, TSUKASA"
 date: "2024-01-09"
 output: html_document
 ---
@@ -9,102 +9,223 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Import the dataset
+### Import the dataset
 
-```{r}
+```{r, echo=FALSE}
 library(tidyverse)
 library(lubridate)
+library(stringr)
 ```
 
-```{r}
+```{r, echo=FALSE}
 library(data.table)
 client_data <- fread("Data/export.csv")
 ```
 
-```{r}
-client_data %>% head(10)
+```{r, echo=FALSE, warning=FALSE}
+description_data <- read_csv("Data/Event Definitions.csv", show_col_types = FALSE)
+```
+
+### Data Wrangling Process
+
+checking that there are no NA values
+
+```{r, echo=FALSE}
+#client_data %>% head(10)
 cleaned_cd <- na.omit(client_data)
 ```
 
-```{r}
-dim(cleaned_cd)
+separate `event_timestamp` variable
+
+```{r, echo=FALSE}
+# extract event_timestamp
+time_period <- cleaned_cd %>% 
+  select(event_timestamp)
+#time_period %>% head(10)
 ```
+
+```{r, echo=FALSE}
+cleaned_cd <- cleaned_cd %>% 
+  mutate(date = format(event_timestamp, "%Y-%m-%d")) %>% 
+  mutate(time = format(event_timestamp, "%H:%M:%S"))
+  
+#cleaned_cd %>% head(10)
+```
+
+Regulating the event_name part for further usage
+
+Finding that there are difference because of (), and extra variables 
+
+```{r, echo=FALSE}
+cd_event_name <- cleaned_cd %>% 
+  select(event_name) %>% 
+  unique() %>% 
+  arrange(event_name) %>% 
+  pull()
+#cd_event_name
+```
+
+```{r, echo=FALSE}
+useful_description <- description_data %>% 
+  select(event_name, event_definition_id, stage)
+useful_event_name <- useful_description %>% 
+  select(event_name) %>% 
+  arrange(event_name) %>% pull()
+#useful_event_name
+```
+
+```{r, echo=FALSE}
+cleaned_cd <- cleaned_cd %>% 
+  mutate(event_name = str_replace_all(event_name, "\\(|\\)", "")) %>% 
+  mutate(event_name = str_replace_all(event_name, "-", "_"))
+
+cd_event_name <- cleaned_cd %>% 
+  select(event_name) %>% 
+  unique() %>% 
+  arrange(event_name) %>% 
+  pull()
+#cd_event_name
+```
+
+still only 26 of them appears in the dataset
+
+```{r, echo=FALSE}
+inter_event_name <- intersect(cd_event_name, useful_event_name)
+#inter_event_name
+```
+
+two in the data
+
+```{r, echo=FALSE}
+setdiff(cd_event_name, inter_event_name)
+```
+
+two in the description, which needs more explanantion
+
+```{r, echo=FALSE}
+setdiff(useful_event_name, inter_event_name)
+```
+
+Since there are still differences in the variable names, we decide to adhere to the description page, and delete some part fron the original data.
+
+```{r, echo=FALSE}
+modified_cd <- cleaned_cd %>% 
+  inner_join(useful_description, by = c(join_by(ed_id == event_definition_id, event_name)))
+
+#modified_cd %>% head(10)
+
+#modified_cd %>% 
+#  select(event_name) %>% 
+#  unique() %>% 
+#  arrange(event_name)
+
+dim(modified_cd)
+```
+
+In conclusion, we cleaned the original dataset, and find there is no missing value. What's more, we merge two tables to add more information regarding the `ed_id` column.
 
 ### Question 1
 
-There are 64911906 observations in the dataset, with each observation representing each customer record.
+There are 64911906 observations originally in the dataset, with each observation representing each customer purchasing record, whether approved or under view.
 
-```{r}
-dim(cleaned_cd)
-summary(cleaned_cd)
+After cleansing, there are 56386082 of them
+
+```{r, echo=FALSE}
+dim(modified_cd)
+#summary(modified_cd)
 ```
 
 ### Question 2 / 3
 
-There are 1665688 customers.
+There are 1665688 customers originally, after modification there are 1665623 of them,
 
-```{r}
-customer_num <- client_data %>% select(customer_id) %>% unique() %>% summarize(n = n())
-account_num <- client_data %>% select(account_id) %>% unique() %>% summarize(n = n())
+For users with more than one-day of record, can be defined as a returning one.
+
+```{r, echo=FALSE}
+customer_num <- modified_cd %>% select(customer_id) %>% unique() %>% summarize(n = n())
+#account_num <- modified_cd %>% select(account_id) %>% unique() %>% summarize(n = n())
 
 customer_num
-account_num
-
-account_num - customer_num
+#account_num
 ```
 
-```{r}
-head(cleaned_cd)
+Thus, there are about 1362015	of them.
+
+```{r, echo=FALSE}
+returning <- modified_cd %>% 
+  group_by(customer_id) %>% 
+  distinct(date) %>%
+  summarize(date_count = n()) %>% 
+  filter(date_count > 1)
+
+returning %>% count()
 ```
 
 ### Question 4
 
-There are 310 accounts with more than 1 customer.
+After modification, there are 310 accounts with more than 1 customer.
 
-```{r}
-extra_customer <- cleaned_cd %>%
+```{r, echo=FALSE}
+extra_customer <- modified_cd %>%
   group_by(account_id) %>%
   distinct(customer_id) %>%
   summarize(num_customer = n()) %>% 
   filter(num_customer > 1)
 
-extra_customer %>% head(10)
+#extra_customer %>% head(10)
 extra_customer %>% count()
 ```
 
-There are 68351 customers with more than 1 account.
+After modification, there are 68343 (befor 68351) customers with more than 1 account.
 
-```{r}
-extra_account <- cleaned_cd %>%
+```{r, echo=FALSE}
+extra_account <- modified_cd %>%
   group_by(customer_id) %>%
   distinct(account_id) %>%
   summarize(num_account = n()) %>% 
   filter(num_account > 1)
 
-extra_account %>% head(10)
+#extra_account %>% head(10)
 extra_account %>% count()
 ```
 
 ### Question 5
 
-```{r}
-time_period <- cleaned_cd %>% select(event_timestamp)
-time_period %>% head(10)
+showing the max and min date, or time period, would make a change if modified.
+
+```{r, echo=FALSE}
+date_info <- cleaned_cd %>% 
+  select(date) %>% 
+  unique() %>% 
+  pull()
+
+max(date_info)
+min(date_info)
 ```
 
-```{r}
-date <- format(time_period, "%Y-%m-%d") %>% unique()
+```{r, echo=FALSE}
+date_info <- modified_cd %>% 
+  select(date) %>% 
+  unique() %>% 
+  pull()
 
-min(date)
-max(date)
+max(date_info)
+min(date_info)
 ```
 
-```{r}
-time <- format(time_period, "%H:%M:%S")
+summarize the busiest time period, same whether modified or not.
+
+```{r, echo=FALSE}
+time_info <- cleaned_cd %>% 
+  select(time) %>% 
+  table() 
+which.max(time_info)
 ```
 
-```{r}
-time_info <- time %>% table()
+```{r, echo=FALSE}
+time_info <- modified_cd %>% 
+  select(time) %>% 
+  table() 
 which.max(time_info)
 ```
 
@@ -112,18 +233,40 @@ which.max(time_info)
 
 It is how many transactions have been made within each account
 
-```{r}
-cleaned_cd %>% filter(account_id == 1773350293)
+```{r, echo=FALSE}
+#modified_cd %>% filter(account_id == 1773350293)
 ```
 
-```{r}
-journey_data <- cleaned_cd %>% 
+```{r, echo=FALSE}
+journey_data <- modified_cd %>% 
   group_by(account_id) %>% 
   summarize(max_journey = max(journey_steps_until_end))
+```
 
-#hist(journey_data)
+The journey data seems to have two peeks, with median of 24 (there should be a histogram, but would exceed the page limit)
+
+```{r, echo=FALSE, eval=FALSE}
+pure_journey <- journey_data %>% select(max_journey) %>% pull()
+
+summary(pure_journey)
+hist(pure_journey, main = "Journey Histogram", xlab = "num_journey", ylab = "counts", 
+     xlim = range(min(pure_journey), 500), breaks = "FD")
 ```
 
 ### Question 7
 
-We cleaned the original dataset, and find there is no missing value.
+In conclusion, we cleaned the original dataset, and find there is no missing value. What's more, we merge two tables to add more information regarding the `ed_id` column.
+
+But there is still one questin that needs to be answered: the difference between data and description
+
+two in the data
+
+```{r, echo=FALSE}
+setdiff(cd_event_name, inter_event_name)
+```
+
+two in the description, which needs more explanantion
+
+```{r, echo=FALSE}
+setdiff(useful_event_name, inter_event_name)
+```
