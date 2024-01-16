@@ -4,6 +4,8 @@ Libraries used
 setwd("C:/Users/lavil/source/repos/LukVill/MATH-M148")
 
 library(tidyverse)
+library(lubridate)
+library(hms)
 
 ```
 
@@ -43,9 +45,36 @@ Questions to Answer
 nrow(export)
 
 # 2.
-# return customers are customers who have more than 1 interaction on different days 
+num_cust <- export %>% select(customer_id) %>% n_distinct()
 
+# 3.
+# return customers are customers who have at least 2 interactions total on different days
+# mutate month, day, year, time into export
+export <- export %>% mutate(months = month(event_timestamp), days = day(event_timestamp), years = year(event_timestamp), times = as_hms(event_timestamp))
+# group by id and dates to get each interaction per date and count (table of all interactions per date per customer)
+# group by id to get days of interaction per customer, filter those more than 1
+num_return_cust <- export %>% group_by(customer_id,months,days,years) %>% count() %>% ungroup() %>% group_by(customer_id) %>% count() %>% filter(n > 1)
 
+# 4.
+num_acct_custs <- export %>% group_by(account_id) %>% count() %>% filter(n > 1) %>% select(account_id) %>% n_distinct()
+num_cust_accts <- export %>% group_by(customer_id) %>% count() %>% filter(n > 1) %>% select(customer_id) %>% n_distinct()
+
+# 5.
+beg_date <- export[which.min(export$event_timestamp),]
+end_date <- export[which.max(export$event_timestamp),]
+
+# 6.
+
+#export_head$journey_steps_until_end
+#export_head %>% slice(1:24)
+export %>% filter(customer_id == -784961211)
+# 24 with export_head
+# 45 with export, two different acct id for same customer
+# for each unique customer/acct pair, journey id describes # of interactions for that pair
+
+# 7. 
+# na detection: no na's
+# date mutation
 
 ```
 
@@ -101,6 +130,10 @@ ed_id analysis
 
 event_name analysis
 ```{r}
+
+event_def
+
+# what is milestone number?
 
 
 ```
