@@ -57,11 +57,19 @@ num_return_cust <- export %>% group_by(customer_id,months,days,years) %>% count(
 
 # 4.
 num_acct_custs <- export %>% group_by(account_id) %>% distinct(customer_id) %>% count() %>% filter(n > 1) 
-num_cust_accts <- export %>% group_by(customer_id) %>% distinct(customer_id) %>% count() %>% filter(n > 1)
+num_cust_accts <- export %>% group_by(customer_id) %>% distinct(account_id) %>% count() %>% filter(n > 1)
 
 # 5.
 beg_date <- export[which.min(export$event_timestamp),]
 end_date <- export[which.max(export$event_timestamp),]
+# get most frequent month/day/year combo
+# export_head %>% group_by(months,days,years) %>% count() %>% arrange(desc(n))
+# do it graphically
+date_export <- export %>% group_by(months,days,years) %>% count() %>% mutate(dates = as_date(paste0(years,"-",months,"-",days))) %>% ungroup() %>% select(dates, n) 
+freq_time_line <- ggplot(date_export, aes(x=dates, y=n, color = dates)) + geom_line() + scale_color_gradient(low = "red", high = "blue") + labs(title = "Interactions Per Day", x = "Dates", y = "Frequency") + theme_minimal() + scale_x_date(breaks = "1 months", date_labels = "%m-%y") + theme(axis.text.x = element_text(angle = 90), legend.position = "none")
+
+ggsave("freq_time_line",freq_time_line,"jpeg", width = 2400, height = 2000, units = "px")
+
 
 # 6.
 
@@ -126,7 +134,18 @@ help("replace_na")
 ```
 
 ed_id analysis
+```{r}
 
+# most frequent id's? make distribution via bar chart
+freq_ed_id_bar <- export %>% select(ed_id) %>% ggplot(aes(x = ed_id)) + geom_bar(fill = "darkred") + labs(title = "Distribution of Event ID's", x = "Event ID values", y = "Frequency") + scale_x_continuous(breaks = 1:40) + theme_minimal()
+
+# ggsave("freq_ed_id_bar",freq_ed_id_bar,"jpeg", width = 2400, height = 2000, units = "px")
+
+event_def %>% filter(event_definition_id == 4)
+
+# NOTE: why are there events in export that do not have a definition in event definitions?
+
+```
 
 event_name analysis
 ```{r}
@@ -139,4 +158,5 @@ event_def
 
 
 ```
-event def defines the description of the category
+conclusion: event def defines the description of the category
+NOT ALL observations' events have a category in event_def
