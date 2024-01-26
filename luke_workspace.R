@@ -5,17 +5,17 @@ library(tidyverse)
 library(lubridate)
 library(hms)
 library(arules)
-install.packages("arulesViz")
-
+library(arulesViz)
+library(data.table)
 
 # event definition set up
 event_def <- "Event Definitions.csv"
 
 # dataset set up
-luke_export_dir <- 'C:/Users/lavil/source/repos/LukVill/Misc Data/export.csv'
+luke_export_dir <- 'C:/Users/lavil/source/repos/LukVill/Misc Data/export_no_dup.csv'
 
 # this is based off of Luke's directory!!! #
-export_head <- fread(luke_export_dir, n_max = 1000)
+export_head <- fread(luke_export_dir, nrows = 1000)
 # this is based off of Luke's directory!!! #
 export <- fread(luke_export_dir)
 
@@ -32,7 +32,7 @@ export_head <- export_head %>% mutate(date = date(event_timestamp),
 export_head <- export_head %>% 
   distinct(customer_id,account_id,event_timestamp,date,hours,mins,secs, .keep_all = T)
 print(export_head, n = 100)
-# print(export_head %>% filter(customer_id == 15849251), n = 100)
+print(export_head %>% filter(customer_id == 15849251), n = 100)
 # print(export_head %>% distinct(customer_id,account_id,date,hours,mins,secs, .keep_all = T), n = 100)
 # print(export_head %>% distinct(customer_id,account_id,date,time), n = 100)
 # CLEANED UP DUPLICATES
