@@ -10,7 +10,7 @@ library(data.table)
 library(scales)
 
 # event definition set up
-event_def <- "Event Definitions.csv"
+event_def <- fread("Event Definitions.csv")
 
 # dataset set up
 luke_export_dir <- 'C:/Users/lavil/source/repos/LukVill/Misc Data/export_no_dup.csv'
@@ -145,6 +145,10 @@ indv_graph
 # what triggers customers to purchase products -- which ordered set of events tend to result in product purchasing
 # 
 
+# make dataframe for apriori algorithm
+export_head %>% group_by(customer_id, account_id, ed_id) %>% count()
+
+
 # GOAL 2: optimizing starting journeys
 # journeys that have 1 step
 apporved_cust <- export_head %>% group_by(customer_id, account_id) %>% filter(sum(journey_steps_until_end) == 1)
@@ -166,5 +170,7 @@ apporved_cust %>% group_by(ed_id) %>% count()
 # 
 unique(event_def$stage)
 event_def %>% filter(stage == "Apply for Credit")
+
+export %>% filter(ed_id == 21)
 
 
